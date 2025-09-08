@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink, Link, BarChart3 } from "lucide-react";
+import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink, Link, BarChart3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";

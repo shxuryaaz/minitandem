@@ -52,8 +52,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      const provider = new GoogleAuthProvider();
+      // Add additional scopes if needed
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      // Handle popup blocked or other errors
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('Popup was blocked by your browser. Please allow popups for this site.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in was cancelled.');
+      } else {
+        throw new Error('Google sign-in failed. Please try again.');
+      }
+    }
   };
 
   const logout = async () => {
