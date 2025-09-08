@@ -8,6 +8,22 @@ export interface IntegrationConfig {
   setupUrl?: string;
   apiKey?: string;
   webhookUrl?: string;
+  oauthUrl?: string;
+  scopes?: string[];
+  clientId?: string;
+}
+
+export interface IntegrationCredentials {
+  accessToken?: string;
+  refreshToken?: string;
+  apiKey?: string;
+  webhookUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  botToken?: string;
+  workspaceId?: string;
+  channelId?: string;
+  databaseId?: string;
 }
 
 export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
@@ -17,6 +33,9 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     description: 'Send notifications and updates to your team channels',
     icon: '💬',
     setupUrl: 'https://api.slack.com/apps',
+    oauthUrl: 'https://slack.com/oauth/v2/authorize',
+    scopes: ['chat:write', 'channels:read', 'groups:read', 'im:read', 'mpim:read'],
+    clientId: process.env.VITE_SLACK_CLIENT_ID || 'your-slack-client-id',
   },
   'google-drive': {
     name: 'Google Drive',
@@ -24,6 +43,9 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     description: 'Store and sync files with your Google Drive account',
     icon: '📁',
     setupUrl: 'https://console.developers.google.com/',
+    oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    scopes: ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive.readonly'],
+    clientId: process.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
   },
   notion: {
     name: 'Notion',
@@ -31,6 +53,9 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     description: 'Create and update pages in your Notion workspace',
     icon: '📝',
     setupUrl: 'https://www.notion.so/my-integrations',
+    oauthUrl: 'https://api.notion.com/v1/oauth/authorize',
+    scopes: ['read', 'write', 'update'],
+    clientId: process.env.VITE_NOTION_CLIENT_ID || 'your-notion-client-id',
   },
   zapier: {
     name: 'Zapier',
@@ -38,6 +63,9 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     description: 'Connect with 5000+ apps through automation workflows',
     icon: '⚡',
     setupUrl: 'https://zapier.com/apps',
+    oauthUrl: 'https://zapier.com/oauth/authorize',
+    scopes: ['read', 'write'],
+    clientId: process.env.VITE_ZAPIER_CLIENT_ID || 'your-zapier-client-id',
   },
   discord: {
     name: 'Discord',
@@ -45,6 +73,9 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     description: 'Send messages to Discord servers and channels',
     icon: '🎮',
     setupUrl: 'https://discord.com/developers/applications',
+    oauthUrl: 'https://discord.com/api/oauth2/authorize',
+    scopes: ['bot', 'messages:send', 'channels:read'],
+    clientId: process.env.VITE_DISCORD_CLIENT_ID || 'your-discord-client-id',
   },
   'google-analytics': {
     name: 'Google Analytics',
@@ -52,6 +83,9 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     description: 'Track user behavior and onboarding funnel metrics',
     icon: '📊',
     setupUrl: 'https://analytics.google.com/',
+    oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+    scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
+    clientId: process.env.VITE_GOOGLE_ANALYTICS_CLIENT_ID || 'your-google-analytics-client-id',
   },
 };
 
@@ -70,23 +104,130 @@ export class IntegrationManager {
     this.currentUserId = userId;
   }
 
-  async connectIntegration(integrationId: string, config: any): Promise<boolean> {
+  // Generate OAuth URL for integration
+  generateOAuthUrl(integrationId: string): string | null {
+    const config = AVAILABLE_INTEGRATIONS[integrationId];
+    if (!config || !config.oauthUrl || !config.clientId) {
+      return null;
+    }
+
+    const redirectUri = `${window.location.origin}/integrations/callback`;
+    const state = `${integrationId}_${this.currentUserId}_${Date.now()}`;
+    
+    const params = new URLSearchParams({
+      client_id: config.clientId,
+      redirect_uri: redirectUri,
+      scope: config.scopes?.join(' ') || '',
+      state: state,
+      response_type: 'code',
+    });
+
+    return `${config.oauthUrl}?${params.toString()}`;
+  }
+
+  // Handle OAuth callback
+  async handleOAuthCallback(code: string, state: string): Promise<boolean> {
+    try {
+      const [integrationId, userId] = state.split('_');
+      if (!integrationId || !userId) {
+        throw new Error('Invalid OAuth state');
+      }
+
+      const credentials = await this.exchangeCodeForTokens(integrationId, code);
+      if (!credentials) {
+        throw new Error('Failed to exchange code for tokens');
+      }
+
+      return await this.connectIntegration(integrationId, credentials);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      return false;
+    }
+  }
+
+  // Exchange authorization code for access tokens
+  private async exchangeCodeForTokens(integrationId: string, code: string): Promise<IntegrationCredentials | null> {
+    try {
+      const response = await fetch('/api/integrations/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          integrationId,
+          code,
+          redirectUri: `${window.location.origin}/integrations/callback`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Token exchange failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.credentials;
+    } catch (error) {
+      console.error('Token exchange error:', error);
+      // For demo purposes, return mock credentials
+      return this.getMockCredentials(integrationId);
+    }
+  }
+
+  // Mock credentials for demo purposes
+  private getMockCredentials(integrationId: string): IntegrationCredentials {
+    const mockCredentials: Record<string, IntegrationCredentials> = {
+      slack: {
+        accessToken: 'xoxb-mock-slack-token',
+        botToken: 'xoxb-mock-bot-token',
+        workspaceId: 'T1234567890',
+        channelId: 'C1234567890',
+      },
+      'google-drive': {
+        accessToken: 'mock-google-access-token',
+        refreshToken: 'mock-google-refresh-token',
+      },
+      notion: {
+        apiKey: 'secret_mock-notion-api-key',
+        databaseId: 'mock-database-id',
+      },
+      zapier: {
+        accessToken: 'mock-zapier-access-token',
+        webhookUrl: 'https://hooks.zapier.com/mock-webhook',
+      },
+      discord: {
+        accessToken: 'mock-discord-access-token',
+        botToken: 'mock-discord-bot-token',
+      },
+      'google-analytics': {
+        accessToken: 'mock-ga-access-token',
+        refreshToken: 'mock-ga-refresh-token',
+      },
+    };
+
+    return mockCredentials[integrationId] || {};
+  }
+
+  async connectIntegration(integrationId: string, credentials: IntegrationCredentials): Promise<boolean> {
     if (!this.currentUserId) {
       throw new Error('User not authenticated');
     }
 
     try {
-      // Simulate API connection (in real implementation, this would make actual API calls)
+      // Test the integration first
+      const isWorking = await this.testIntegration(integrationId, credentials);
+      
       const integration: Omit<Integration, 'id'> = {
         name: AVAILABLE_INTEGRATIONS[integrationId]?.name || integrationId,
         type: AVAILABLE_INTEGRATIONS[integrationId]?.type || 'unknown',
-        status: 'connected',
+        status: isWorking ? 'connected' : 'error',
         userId: this.currentUserId,
-        config: config,
+        config: credentials,
+        connectedAt: new Date(),
+        lastActivity: new Date(),
       };
 
       await IntegrationService.addIntegration(integration);
-      return true;
+      return isWorking;
     } catch (error) {
       console.error('Error connecting integration:', error);
       return false;
@@ -118,42 +259,235 @@ export class IntegrationManager {
     }
   }
 
-  async testIntegration(integrationId: string): Promise<boolean> {
-    // Simulate integration test (in real implementation, this would test actual API connectivity)
+  async testIntegration(integrationId: string, credentials?: IntegrationCredentials): Promise<boolean> {
     try {
-      // Simulate API test delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate success/failure based on integration type
-      const integration = AVAILABLE_INTEGRATIONS[integrationId];
-      if (!integration) return false;
+      // If no credentials provided, get from database
+      if (!credentials && this.currentUserId) {
+        const integrations = await IntegrationService.getIntegrations(this.currentUserId);
+        const integration = integrations.find(i => i.name.toLowerCase() === integrationId.toLowerCase());
+        credentials = integration?.config as IntegrationCredentials;
+      }
 
-      // Mock test results
-      const testResults: Record<string, boolean> = {
-        slack: true,
-        'google-drive': true,
-        notion: false, // Simulate failure
-        zapier: true,
-        discord: true,
-        'google-analytics': true,
-      };
+      if (!credentials) {
+        return false;
+      }
 
-      return testResults[integrationId] ?? true;
+      // Test actual API connectivity
+      switch (integrationId) {
+        case 'slack':
+          return await this.testSlackIntegration(credentials);
+        case 'google-drive':
+          return await this.testGoogleDriveIntegration(credentials);
+        case 'notion':
+          return await this.testNotionIntegration(credentials);
+        case 'zapier':
+          return await this.testZapierIntegration(credentials);
+        case 'discord':
+          return await this.testDiscordIntegration(credentials);
+        case 'google-analytics':
+          return await this.testGoogleAnalyticsIntegration(credentials);
+        default:
+          return false;
+      }
     } catch (error) {
       console.error('Error testing integration:', error);
       return false;
     }
   }
 
+  // Slack integration test
+  private async testSlackIntegration(credentials: IntegrationCredentials): Promise<boolean> {
+    try {
+      const response = await fetch('https://slack.com/api/auth.test', {
+        headers: {
+          'Authorization': `Bearer ${credentials.botToken || credentials.accessToken}`,
+        },
+      });
+      const data = await response.json();
+      return data.ok === true;
+    } catch (error) {
+      console.error('Slack test error:', error);
+      return false;
+    }
+  }
+
+  // Google Drive integration test
+  private async testGoogleDriveIntegration(credentials: IntegrationCredentials): Promise<boolean> {
+    try {
+      const response = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+        headers: {
+          'Authorization': `Bearer ${credentials.accessToken}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Google Drive test error:', error);
+      return false;
+    }
+  }
+
+  // Notion integration test
+  private async testNotionIntegration(credentials: IntegrationCredentials): Promise<boolean> {
+    try {
+      const response = await fetch('https://api.notion.com/v1/users/me', {
+        headers: {
+          'Authorization': `Bearer ${credentials.apiKey}`,
+          'Notion-Version': '2022-06-28',
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Notion test error:', error);
+      return false;
+    }
+  }
+
+  // Zapier integration test
+  private async testZapierIntegration(credentials: IntegrationCredentials): Promise<boolean> {
+    try {
+      const response = await fetch('https://api.zapier.com/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${credentials.accessToken}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Zapier test error:', error);
+      return false;
+    }
+  }
+
+  // Discord integration test
+  private async testDiscordIntegration(credentials: IntegrationCredentials): Promise<boolean> {
+    try {
+      const response = await fetch('https://discord.com/api/v10/users/@me', {
+        headers: {
+          'Authorization': `Bearer ${credentials.accessToken}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Discord test error:', error);
+      return false;
+    }
+  }
+
+  // Google Analytics integration test
+  private async testGoogleAnalyticsIntegration(credentials: IntegrationCredentials): Promise<boolean> {
+    try {
+      const response = await fetch('https://www.googleapis.com/analytics/v3/management/accounts', {
+        headers: {
+          'Authorization': `Bearer ${credentials.accessToken}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Google Analytics test error:', error);
+      return false;
+    }
+  }
+
   async sendTestMessage(integrationId: string, message: string): Promise<boolean> {
     try {
-      // Simulate sending test message (in real implementation, this would send actual messages)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!this.currentUserId) {
+        return false;
+      }
+
+      const integrations = await IntegrationService.getIntegrations(this.currentUserId);
+      const integration = integrations.find(i => i.name.toLowerCase() === integrationId.toLowerCase());
       
-      console.log(`Sending test message to ${integrationId}: ${message}`);
-      return true;
+      if (!integration || integration.status !== 'connected') {
+        return false;
+      }
+
+      const credentials = integration.config as IntegrationCredentials;
+
+      switch (integrationId) {
+        case 'slack':
+          return await this.sendSlackMessage(credentials, message);
+        case 'discord':
+          return await this.sendDiscordMessage(credentials, message);
+        case 'notion':
+          return await this.createNotionPage(credentials, message);
+        default:
+          return false;
+      }
     } catch (error) {
       console.error('Error sending test message:', error);
+      return false;
+    }
+  }
+
+  // Send message to Slack
+  private async sendSlackMessage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
+    try {
+      const response = await fetch('https://slack.com/api/chat.postMessage', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${credentials.botToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channel: credentials.channelId || '#general',
+          text: `🤖 MiniTandem Test: ${message}`,
+        }),
+      });
+      const data = await response.json();
+      return data.ok === true;
+    } catch (error) {
+      console.error('Slack message error:', error);
+      return false;
+    }
+  }
+
+  // Send message to Discord
+  private async sendDiscordMessage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
+    try {
+      const response = await fetch(`https://discord.com/api/v10/channels/${credentials.channelId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bot ${credentials.botToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: `🤖 MiniTandem Test: ${message}`,
+        }),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Discord message error:', error);
+      return false;
+    }
+  }
+
+  // Create Notion page
+  private async createNotionPage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
+    try {
+      const response = await fetch('https://api.notion.com/v1/pages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${credentials.apiKey}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28',
+        },
+        body: JSON.stringify({
+          parent: { database_id: credentials.databaseId },
+          properties: {
+            title: {
+              title: [
+                {
+                  text: {
+                    content: `MiniTandem Test: ${message}`,
+                  },
+                },
+              ],
+            },
+          },
+        }),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Notion page creation error:', error);
       return false;
     }
   }

@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
+import IntegrationCallback from "./pages/IntegrationCallback";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,9 @@ const App = () => (
               
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
+              
+              {/* Integration Callback */}
+              <Route path="/integrations/callback" element={<IntegrationCallback />} />
               
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard" element={
