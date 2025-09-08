@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink } from "lucide-react";
+import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink, Link, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { aiService, AIResponse } from "@/lib/ai";
+import { integrationManager } from "@/lib/integrations";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 interface Message {
@@ -14,7 +16,7 @@ interface Message {
   content: string;
   timestamp: Date;
   actions?: Array<{
-    type: "navigate" | "demo" | "info";
+    type: "navigate" | "demo" | "info" | "connect" | "data";
     label: string;
     data?: any;
   }>;
@@ -45,6 +47,14 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  // Set user ID in AI service when user is available
+  useEffect(() => {
+    if (currentUser) {
+      aiService.setUserId(currentUser.uid);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -108,13 +118,55 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     }
   };
 
-  const handleAction = (action: { type: "navigate" | "demo" | "info"; label: string; data?: any }) => {
+  const handleConnectIntegration = async (integrationId: string) => {
+    try {
+      toast.loading(`Connecting ${integrationId}...`);
+      
+      // Test the integration first
+      const testResult = await integrationManager.testIntegration(integrationId);
+      
+      if (testResult) {
+        // Connect the integration
+        const success = await integrationManager.connectIntegration(integrationId, {
+          connectedAt: new Date().toISOString(),
+          testPassed: true
+        });
+        
+        if (success) {
+          toast.success(`${integrationId} connected successfully!`);
+          navigate('/integrations');
+        } else {
+          toast.error(`Failed to connect ${integrationId}`);
+        }
+      } else {
+        toast.error(`${integrationId} connection test failed. Please check your configuration.`);
+      }
+    } catch (error) {
+      console.error('Error connecting integration:', error);
+      toast.error(`Error connecting ${integrationId}`);
+    }
+  };
+
+  const handleAction = (action: { type: "navigate" | "demo" | "info" | "connect" | "data"; label: string; data?: any }) => {
     switch (action.type) {
       case 'navigate':
         if (action.data?.path) {
           navigate(action.data.path);
           toast.success(`Navigating to ${action.label}`);
         }
+        break;
+      case 'connect':
+        if (action.data?.action === 'connect_integration' && action.data?.integration) {
+          // Actually connect the integration
+          handleConnectIntegration(action.data.integration);
+        } else {
+          navigate('/integrations');
+          toast.success('Opening integrations page');
+        }
+        break;
+      case 'data':
+        navigate('/analytics');
+        toast.success('Showing live data insights');
         break;
       case 'demo':
         toast.info(`Demo: ${action.label}`);
@@ -187,6 +239,10 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
                       >
                         {action.type === 'navigate' ? (
                           <Navigation className="h-3 w-3" />
+                        ) : action.type === 'connect' ? (
+                          <Link className="h-3 w-3" />
+                        ) : action.type === 'data' ? (
+                          <BarChart3 className="h-3 w-3" />
                         ) : action.type === 'demo' ? (
                           <Zap className="h-3 w-3" />
                         ) : (
