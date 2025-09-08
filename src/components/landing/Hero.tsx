@@ -47,13 +47,6 @@ export function Hero() {
           animate="visible"
           className="mx-auto max-w-4xl text-center"
         >
-          {/* Badge */}
-          <motion.div variants={itemVariants} className="mb-8">
-            <div className="inline-flex items-center rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 ring-1 ring-blue-600/20 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-400/20">
-              <Sparkles className="mr-2 h-4 w-4" />
-              AI-Powered Onboarding Platform
-            </div>
-          </motion.div>
 
           {/* Headline */}
           <motion.h1
@@ -64,7 +57,7 @@ export function Hero() {
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               User Onboarding
             </span>{" "}
-            with AI
+            with MiniTandem
           </motion.h1>
 
           {/* Subheadline */}
@@ -72,7 +65,7 @@ export function Hero() {
             variants={itemVariants}
             className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300 sm:text-xl"
           >
-            Reduce time-to-value by 95% with intelligent guidance, personalized experiences, 
+            Reduce time-to-value by 95% with MiniTandem's intelligent guidance, personalized experiences, 
             and automated workflows that turn trial users into paying customers.
           </motion.p>
 

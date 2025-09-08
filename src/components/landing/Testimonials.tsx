@@ -61,8 +61,12 @@ export function Testimonials() {
   };
 
   return (
-    <section id="testimonials" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <section id="testimonials" className="py-24 sm:py-32 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
+      {/* Curved Background Pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%22100%22%20height%3D%22100%22%20viewBox%3D%220%200%20100%20100%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23f9fafb%22%20fill-opacity%3D%220.5%22%3E%3Cpath%20d%3D%22M50%2050c0-27.614-22.386-50-50-50v100c27.614%200%2050-22.386%2050-50z%22/%3E%3Cpath%20d%3D%22M50%2050c0%2027.614%2022.386%2050%2050%2050V0c-27.614%200-50%2022.386-50%2050z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-25" />
+      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-transparent" />
+      
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

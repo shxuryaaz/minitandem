@@ -20,12 +20,16 @@ export function Navigation() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-500">
-              <Sparkles className="h-5 w-5 text-white" />
+          <div className="flex items-center space-x-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+              <img 
+                src="https://i.ibb.co/ynbPz6cH/logo.png" 
+                alt="AI Onboarding Copilot Logo" 
+                className="h-full w-full object-contain"
+              />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              AI Onboarding Copilot
+              MiniTandem
             </span>
           </div>
 
