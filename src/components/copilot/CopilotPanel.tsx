@@ -118,6 +118,13 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputValue.trim()) {
+      handleSendMessage(inputValue);
+    }
+  };
+
   const handleConnectIntegration = async (integrationId: string) => {
     try {
       toast.loading(`Connecting ${integrationId}...`);
@@ -195,10 +202,10 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, x: 400, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-6 right-6 z-40 w-96 h-[36rem] bg-card border rounded-2xl shadow-2xl overflow-hidden"
+      className="fixed bottom-6 right-6 z-40 w-96 h-[36rem] bg-card border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-copilot-primary p-4 text-white">
+      <div className="bg-gradient-to-r from-primary to-copilot-primary p-4 text-white flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
             <span className="text-lg">🤖</span>
@@ -207,86 +214,96 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
             <h3 className="font-semibold">AI Copilot</h3>
             <p className="text-xs opacity-90">Here to help you succeed</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="ml-auto text-white hover:bg-white/20"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Messages */}
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 h-96">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[90%] p-3 rounded-xl break-words ${
-                  message.type === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
+      {/* Messages - Takes up remaining space */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea ref={scrollAreaRef} className="h-full p-4">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                {message.actions && message.actions.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {message.actions.map((action, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleAction(action)}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 hover:bg-primary/20 text-xs rounded-full transition-colors cursor-pointer"
-                      >
-                        {action.type === 'navigate' ? (
-                          <Navigation className="h-3 w-3" />
-                        ) : action.type === 'connect' ? (
-                          <Link className="h-3 w-3" />
-                        ) : action.type === 'data' ? (
-                          <BarChart3 className="h-3 w-3" />
-                        ) : action.type === 'demo' ? (
-                          <Zap className="h-3 w-3" />
-                        ) : (
-                          <ExternalLink className="h-3 w-3" />
-                        )}
-                        {action.label}
-                      </button>
+                <div
+                  className={`max-w-[90%] p-3 rounded-xl break-words ${
+                    message.type === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                  {message.actions && message.actions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {message.actions.map((action, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleAction(action)}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 hover:bg-primary/20 text-xs rounded-full transition-colors cursor-pointer"
+                        >
+                          {action.type === 'navigate' ? (
+                            <Navigation className="h-3 w-3" />
+                          ) : action.type === 'connect' ? (
+                            <Link className="h-3 w-3" />
+                          ) : action.type === 'data' ? (
+                            <BarChart3 className="h-3 w-3" />
+                          ) : action.type === 'demo' ? (
+                            <Zap className="h-3 w-3" />
+                          ) : (
+                            <ExternalLink className="h-3 w-3" />
+                          )}
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+            
+            {isTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex justify-start"
+              >
+                <div className="bg-muted p-3 rounded-xl">
+                  <div className="flex space-x-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-2 h-2 bg-muted-foreground rounded-full"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{
+                          duration: 0.6,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                        }}
+                      />
                     ))}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-          
-          {isTyping && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex justify-start"
-            >
-              <div className="bg-muted p-3 rounded-xl">
-                <div className="flex space-x-1">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      className="w-2 h-2 bg-muted-foreground rounded-full"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{
-                        duration: 0.6,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                      }}
-                    />
-                  ))}
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </ScrollArea>
+              </motion.div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
       {/* Quick Suggestions */}
       {messages.length === 1 && (
-        <div className="p-4 border-t">
+        <div className="p-4 border-t flex-shrink-0">
           <p className="text-xs text-muted-foreground mb-3 font-medium">Quick suggestions:</p>
           <div className="space-y-2">
             {quickSuggestions.map((suggestion, index) => (
@@ -306,31 +323,37 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
         </div>
       )}
 
-      {/* Input */}
-      <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(inputValue);
-              }
-            }}
-            placeholder="Ask me anything..."
-            className="flex-1 rounded-xl border-0 bg-muted/50 focus-visible:ring-1"
-          />
-          <Button
-            onClick={() => handleSendMessage(inputValue)}
+      {/* Input Area */}
+      <div className="p-4 border-t flex-shrink-0">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+          <div className="flex-1 relative">
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Ask me anything..."
+              disabled={isTyping}
+              className="w-full min-h-[40px] max-h-[120px] px-3 py-2 text-sm border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{
+                height: 'auto',
+                overflow: 'hidden'
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+              }}
+            />
+          </div>
+          <Button 
+            type="submit" 
+            size="icon" 
             disabled={!inputValue.trim() || isTyping}
-            size="icon"
-            className="rounded-xl bg-primary hover:bg-primary/90"
+            className="flex-shrink-0 h-10 w-10"
           >
             <Send className="h-4 w-4" />
           </Button>
-        </div>
+        </form>
       </div>
     </motion.div>
   );
