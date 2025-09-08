@@ -168,48 +168,20 @@ export class IntegrationManager {
       return data.credentials;
     } catch (error) {
       console.error('Token exchange error:', error);
-      // For demo purposes, return mock credentials
-      return this.getMockCredentials(integrationId);
+      // Return null if no backend API is available - no mock credentials
+      return null;
     }
   }
 
-  // Mock credentials for demo purposes
-  private getMockCredentials(integrationId: string): IntegrationCredentials {
-    const mockCredentials: Record<string, IntegrationCredentials> = {
-      slack: {
-        accessToken: 'xoxb-mock-slack-token',
-        botToken: 'xoxb-mock-bot-token',
-        workspaceId: 'T1234567890',
-        channelId: 'C1234567890',
-      },
-      'google-drive': {
-        accessToken: 'mock-google-access-token',
-        refreshToken: 'mock-google-refresh-token',
-      },
-      notion: {
-        apiKey: 'secret_mock-notion-api-key',
-        databaseId: 'mock-database-id',
-      },
-      zapier: {
-        accessToken: 'mock-zapier-access-token',
-        webhookUrl: 'https://hooks.zapier.com/mock-webhook',
-      },
-      discord: {
-        accessToken: 'mock-discord-access-token',
-        botToken: 'mock-discord-bot-token',
-      },
-      'google-analytics': {
-        accessToken: 'mock-ga-access-token',
-        refreshToken: 'mock-ga-refresh-token',
-      },
-    };
-
-    return mockCredentials[integrationId] || {};
-  }
 
   async connectIntegration(integrationId: string, credentials: IntegrationCredentials): Promise<boolean> {
     if (!this.currentUserId) {
       throw new Error('User not authenticated');
+    }
+
+    if (!credentials || Object.keys(credentials).length === 0) {
+      console.error('No valid credentials provided for integration:', integrationId);
+      return false;
     }
 
     try {

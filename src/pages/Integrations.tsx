@@ -95,14 +95,8 @@ export default function Integrations() {
           }
         }, 1000);
       } else {
-        // Fallback to mock connection for demo
-        const success = await integrationManager.connectIntegration(integrationId, {});
-        if (success) {
-          toast.success(`${integrationId} connected successfully!`);
-          loadIntegrations();
-        } else {
-          toast.error(`Failed to connect ${integrationId}`);
-        }
+        // No OAuth URL available - client ID not configured
+        toast.error(`${integrationId} integration not configured. Please add the client ID to environment variables.`);
       }
     } catch (error) {
       console.error('Connection error:', error);
