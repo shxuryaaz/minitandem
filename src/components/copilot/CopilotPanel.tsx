@@ -36,7 +36,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     {
       id: "1",
       type: "copilot",
-      content: "👋 Hi! I'm your AI Onboarding Copilot. I can help you navigate the platform, explain features, and guide you through common tasks. What would you like to learn?",
+      content: "👋 Hi! I'm your AI Copilot. I can help you navigate, explain features, and guide you through tasks. What would you like to learn?",
       timestamp: new Date(),
     },
   ]);
@@ -170,13 +170,13 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
               className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-xl ${
+                className={`max-w-[90%] p-3 rounded-xl break-words ${
                   message.type === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.content}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                 {message.actions && message.actions.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {message.actions.map((action, index) => (
