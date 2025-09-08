@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -37,55 +37,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { CustomerService, Customer, initializeSampleData } from "@/lib/firestore";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  company: string;
-  status: "active" | "inactive" | "trial";
-  joinDate: string;
-  lastSeen: string;
-}
-
-const customers: Customer[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah@techcorp.com",
-    company: "TechCorp Solutions",
-    status: "active",
-    joinDate: "2024-01-15",
-    lastSeen: "2 hours ago",
-  },
-  {
-    id: "2",
-    name: "Mike Chen",
-    email: "mike@startup.io",
-    company: "Startup Innovations",
-    status: "trial",
-    joinDate: "2024-02-01",
-    lastSeen: "1 day ago",
-  },
-  {
-    id: "3",
-    name: "Emily Davis",
-    email: "emily@enterprise.com",
-    company: "Enterprise Systems",
-    status: "active",
-    joinDate: "2023-12-10",
-    lastSeen: "5 minutes ago",
-  },
-  {
-    id: "4",
-    name: "Alex Turner",
-    email: "alex@digitalagency.com",
-    company: "Digital Agency Pro",
-    status: "inactive",
-    joinDate: "2024-01-20",
-    lastSeen: "2 weeks ago",
-  },
-];
+// Remove duplicate interface - using the one from firestore.ts
 
 function AddCustomerModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,14 +49,27 @@ function AddCustomerModal() {
     name: "",
     email: "",
     company: "",
+    status: "trial" as const,
+    plan: "free" as const,
+    source: "website",
+    notes: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("New customer:", formData);
-    setIsOpen(false);
-    setFormData({ name: "", email: "", company: "" });
+    try {
+      setLoading(true);
+      await CustomerService.addCustomer(formData);
+      toast.success('Customer added successfully');
+      setIsOpen(false);
+      setFormData({ name: "", email: "", company: "", status: "trial", plan: "free", source: "website", notes: "" });
+    } catch (error) {
+      console.error('Error adding customer:', error);
+      toast.error('Failed to add customer');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -154,8 +123,8 @@ function AddCustomerModal() {
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="btn-primary">
-              Add Customer
+            <Button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Adding..." : "Add Customer"}
             </Button>
           </div>
         </form>
@@ -165,8 +134,44 @@ function AddCustomerModal() {
 }
 
 export default function Customers() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredCustomers, setFilteredCustomers] = useState(customers);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
+
+  // Load customers from Firestore
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const loadCustomers = async () => {
+      try {
+        setLoading(true);
+        // Initialize sample data if needed
+        await initializeSampleData(currentUser.uid);
+        
+        // Subscribe to real-time updates
+        const unsubscribe = CustomerService.subscribeToCustomers((customers) => {
+          setCustomers(customers);
+          setFilteredCustomers(customers);
+          setLoading(false);
+        });
+
+        return unsubscribe;
+      } catch (error) {
+        console.error('Error loading customers:', error);
+        toast.error('Failed to load customers');
+        setLoading(false);
+      }
+    };
+
+    const unsubscribe = loadCustomers();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe.then(unsub => unsub());
+      }
+    };
+  }, [currentUser]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -177,6 +182,16 @@ export default function Customers() {
         customer.company.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredCustomers(filtered);
+  };
+
+  const handleDeleteCustomer = async (id: string) => {
+    try {
+      await CustomerService.deleteCustomer(id);
+      toast.success('Customer deleted successfully');
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      toast.error('Failed to delete customer');
+    }
   };
 
   const getStatusBadge = (status: Customer["status"]) => {
@@ -319,8 +334,24 @@ export default function Customers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <AnimatePresence>
-                    {filteredCustomers.map((customer, index) => (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          <span className="ml-2">Loading customers...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No customers found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <AnimatePresence>
+                      {filteredCustomers.map((customer, index) => (
                       <motion.tr
                         key={customer.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -349,9 +380,11 @@ export default function Customers() {
                           {customer.company}
                         </TableCell>
                         <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                        <TableCell>{customer.joinDate}</TableCell>
+                        <TableCell>
+                          {customer.createdAt?.toDate().toLocaleDateString() || 'N/A'}
+                        </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {customer.lastSeen}
+                          {customer.lastActivity?.toDate().toLocaleDateString() || 'Never'}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
@@ -369,7 +402,10 @@ export default function Customers() {
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handleDeleteCustomer(customer.id)}
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
                               </DropdownMenuItem>
@@ -378,7 +414,8 @@ export default function Customers() {
                         </TableCell>
                       </motion.tr>
                     ))}
-                  </AnimatePresence>
+                    </AnimatePresence>
+                  )}
                 </TableBody>
               </Table>
             </div>

@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Lightbulb, Zap, Target, ArrowRight } from "lucide-react";
+import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { aiService, AIResponse } from "@/lib/ai";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -11,9 +14,9 @@ interface Message {
   content: string;
   timestamp: Date;
   actions?: Array<{
-    type: "highlight" | "click" | "fill";
-    element: string;
-    value?: string;
+    type: "navigate" | "demo" | "info";
+    label: string;
+    data?: any;
   }>;
 }
 
@@ -41,6 +44,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
   const [isTyping, setIsTyping] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -68,50 +72,59 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Get real AI response
+      const aiResponse: AIResponse = await aiService.generateResponse(content);
+      
       const copilotMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "copilot",
-        content: generateCopilotResponse(content),
+        content: aiResponse.content,
         timestamp: new Date(),
-        actions: generateActions(content),
+        actions: aiResponse.actions,
       };
       
       setMessages(prev => [...prev, copilotMessage]);
+    } catch (error) {
+      console.error('AI Service Error:', error);
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "copilot",
+        content: "I'm having trouble connecting to the AI service right now. Please try again in a moment, or feel free to explore the platform manually.",
+        timestamp: new Date(),
+        actions: [
+          {
+            type: 'navigate',
+            label: 'Go to Dashboard',
+            data: { path: '/dashboard' }
+          }
+        ],
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const generateCopilotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes("customer") || input.includes("add")) {
-      return "I'll help you add a new customer! Let me highlight the 'Add Customer' button and walk you through the process. You'll need to provide the customer's name, email, and company information.";
+  const handleAction = (action: { type: "navigate" | "demo" | "info"; label: string; data?: any }) => {
+    switch (action.type) {
+      case 'navigate':
+        if (action.data?.path) {
+          navigate(action.data.path);
+          toast.success(`Navigating to ${action.label}`);
+        }
+        break;
+      case 'demo':
+        toast.info(`Demo: ${action.label}`);
+        // Handle demo actions here
+        break;
+      case 'info':
+        toast.info(`Info: ${action.label}`);
+        // Handle info actions here
+        break;
     }
-    
-    if (input.includes("integration")) {
-      return "Great! I'll show you how to connect integrations. The Integrations page displays all available services like Google Drive, Slack, and Notion. I can guide you through connecting any of these.";
-    }
-    
-    if (input.includes("analytics") || input.includes("dashboard")) {
-      return "The Analytics dashboard shows key metrics about user engagement and feature usage. I'll highlight the important sections and explain what each metric means for your business.";
-    }
-    
-    return "I understand you're looking for help with that feature. Let me guide you through the relevant sections of the platform and explain how everything works together.";
-  };
-
-  const generateActions = (userInput: string): Message["actions"] => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes("customer")) {
-      return [
-        { type: "highlight", element: "add-customer-button" },
-        { type: "click", element: "customers-nav" },
-      ];
-    }
-    
-    return [];
   };
 
   const handleQuickAction = (action: string) => {
@@ -165,15 +178,22 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
               >
                 <p className="text-sm leading-relaxed">{message.content}</p>
                 {message.actions && message.actions.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {message.actions.map((action, index) => (
-                      <span
+                      <button
                         key={index}
-                        className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-xs rounded-full"
+                        onClick={() => handleAction(action)}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 hover:bg-primary/20 text-xs rounded-full transition-colors cursor-pointer"
                       >
-                        <ArrowRight className="h-3 w-3" />
-                        {action.type}
-                      </span>
+                        {action.type === 'navigate' ? (
+                          <Navigation className="h-3 w-3" />
+                        ) : action.type === 'demo' ? (
+                          <Zap className="h-3 w-3" />
+                        ) : (
+                          <ExternalLink className="h-3 w-3" />
+                        )}
+                        {action.label}
+                      </button>
                     ))}
                   </div>
                 )}

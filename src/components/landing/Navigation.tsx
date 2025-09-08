@@ -50,6 +50,7 @@ export function Navigation() {
           <div className="hidden md:flex md:items-center md:space-x-4">
             <Button
               variant="ghost"
+              onClick={() => navigate("/login")}
               className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
             >
               Sign In
@@ -101,6 +102,10 @@ export function Navigation() {
               <div className="mt-4 space-y-2">
                 <Button
                   variant="ghost"
+                  onClick={() => {
+                    navigate("/login");
+                    setMobileMenuOpen(false);
+                  }}
                   className="w-full justify-start text-gray-700 dark:text-gray-300"
                 >
                   Sign In
