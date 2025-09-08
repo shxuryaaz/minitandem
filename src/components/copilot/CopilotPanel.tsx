@@ -324,8 +324,8 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       )}
 
       {/* Input Area */}
-      <div className="p-4 border-t flex-shrink-0">
-        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+      <div className="p-4 border-t flex-shrink-0 bg-background">
+        <form onSubmit={handleSubmit} className="flex gap-3 items-end">
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
@@ -349,7 +349,11 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
             type="submit" 
             size="icon" 
             disabled={!inputValue.trim() || isTyping}
-            className="flex-shrink-0 h-10 w-10"
+            className={`flex-shrink-0 h-10 w-10 shadow-lg border-2 transition-all duration-200 ${
+              !inputValue.trim() || isTyping
+                ? 'bg-muted text-muted-foreground border-muted cursor-not-allowed'
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground border-primary/20 hover:border-primary/40'
+            }`}
           >
             <Send className="h-4 w-4" />
           </Button>
