@@ -205,12 +205,12 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       className="fixed bottom-6 right-6 z-40 w-96 h-[36rem] bg-card border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-copilot-primary p-4 text-white flex-shrink-0">
+      <div className="bg-gradient-to-r from-primary to-copilot-primary p-4 text-white flex-shrink-0 relative">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
             <span className="text-lg">🤖</span>
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="font-semibold">AI Copilot</h3>
             <p className="text-xs opacity-90">Here to help you succeed</p>
           </div>
@@ -218,7 +218,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="ml-auto text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 h-8 w-8 flex-shrink-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -325,15 +325,16 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
 
       {/* Input Area */}
       <div className="p-4 border-t flex-shrink-0 bg-background">
-        <form onSubmit={handleSubmit} className="flex gap-3 items-end">
-          <div className="flex-1 relative">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Input field */}
+          <div className="relative">
             <textarea
               ref={inputRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask me anything..."
               disabled={isTyping}
-              className="w-full min-h-[40px] max-h-[120px] px-3 py-2 text-sm border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full min-h-[40px] max-h-[120px] px-3 py-2 pr-12 text-sm border border-input bg-background rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               style={{
                 height: 'auto',
                 overflow: 'hidden'
@@ -344,19 +345,34 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
                 target.style.height = Math.min(target.scrollHeight, 120) + 'px';
               }}
             />
+            {/* Clear button inside textarea */}
+            {inputValue.trim() && (
+              <button
+                type="button"
+                onClick={() => setInputValue("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
-          <Button 
-            type="submit" 
-            size="icon" 
-            disabled={!inputValue.trim() || isTyping}
-            className={`flex-shrink-0 h-10 w-10 shadow-lg border-2 transition-all duration-200 ${
-              !inputValue.trim() || isTyping
-                ? 'bg-muted text-muted-foreground border-muted cursor-not-allowed'
-                : 'bg-primary hover:bg-primary/90 text-primary-foreground border-primary/20 hover:border-primary/40'
-            }`}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+          
+          {/* Action buttons */}
+          <div className="flex justify-end gap-2">
+            <Button 
+              type="submit" 
+              size="sm"
+              disabled={!inputValue.trim() || isTyping}
+              className={`h-9 px-4 shadow-md transition-all duration-200 ${
+                !inputValue.trim() || isTyping
+                  ? 'bg-muted text-muted-foreground border-muted cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary/90 text-primary-foreground border-primary/20 hover:border-primary/40'
+              }`}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send
+            </Button>
+          </div>
         </form>
       </div>
     </motion.div>
