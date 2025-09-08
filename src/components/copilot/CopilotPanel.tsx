@@ -28,9 +28,9 @@ interface CopilotPanelProps {
 }
 
 const quickSuggestions = [
-  { icon: Lightbulb, text: "Show me how to add a customer", action: "demo_add_customer" },
-  { icon: Zap, text: "Connect a new integration", action: "demo_integration" },
-  { icon: Target, text: "Explain the analytics dashboard", action: "demo_analytics" },
+  { icon: Lightbulb, text: "How to add a customer", action: "demo_add_customer" },
+  { icon: Zap, text: "Connect an integration", action: "demo_integration" },
+  { icon: Target, text: "Analytics dashboard", action: "demo_analytics" },
 ];
 
 export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
@@ -38,7 +38,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     {
       id: "1",
       type: "copilot",
-      content: "👋 Hi! I'm your AI Copilot. I can help you navigate, explain features, and guide you through tasks. What would you like to learn?",
+      content: "👋 Hi! I'm your AI Copilot. I can help you navigate the platform, explain features, and guide you through tasks. What would you like to learn?",
       timestamp: new Date(),
     },
   ]);
@@ -195,7 +195,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, x: 400, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-6 right-6 z-40 w-96 h-[32rem] bg-card border rounded-2xl shadow-2xl overflow-hidden"
+      className="fixed bottom-6 right-6 z-40 w-96 h-[36rem] bg-card border rounded-2xl shadow-2xl overflow-hidden"
     >
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-copilot-primary p-4 text-white">
@@ -211,7 +211,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 h-80">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4 h-96">
         <div className="space-y-4">
           {messages.map((message) => (
             <motion.div
@@ -287,7 +287,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       {/* Quick Suggestions */}
       {messages.length === 1 && (
         <div className="p-4 border-t">
-          <p className="text-xs text-muted-foreground mb-3">Quick suggestions:</p>
+          <p className="text-xs text-muted-foreground mb-3 font-medium">Quick suggestions:</p>
           <div className="space-y-2">
             {quickSuggestions.map((suggestion, index) => (
               <motion.button
@@ -296,9 +296,9 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleQuickAction(suggestion.action)}
-                className="w-full text-left p-2 rounded-lg hover:bg-accent transition-colors text-xs flex items-center gap-2"
+                className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors text-sm flex items-center gap-3"
               >
-                <suggestion.icon className="h-3 w-3 text-primary" />
+                <suggestion.icon className="h-4 w-4 text-primary" />
                 {suggestion.text}
               </motion.button>
             ))}
