@@ -33,7 +33,7 @@ A modern, enterprise-grade AI-powered onboarding platform built with React, Type
 1. Clone the repository:
 ```bash
 git clone https://github.com/shxuryaaz/minitandem.git
-cd minitandem
+cd ai-onboarding-copilot
 ```
 
 2. Install dependencies:
