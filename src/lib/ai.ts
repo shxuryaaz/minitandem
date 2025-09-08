@@ -51,6 +51,8 @@ export class AIService {
 4. Help users understand onboarding concepts
 5. Guide them through common tasks
 
+IMPORTANT: Always use the LIVE DATA CONTEXT below to provide accurate, up-to-date information. Do not make up or guess information - only use what's provided in the live data.
+
 LIVE DATA CONTEXT:
 ${liveData}
 
@@ -61,7 +63,7 @@ Available actions you can suggest:
 - connect: Connect real integrations
 - data: Show live data insights
 
-Keep responses concise but informative. Use the live data to provide accurate, up-to-date information. If the user asks about specific features, provide helpful guidance with real data and suggest relevant actions.`;
+Keep responses concise but informative. When users ask about specific customers, companies, or data, always reference the exact information from the live data context above. If the live data doesn't contain the requested information, say so clearly.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
@@ -112,11 +114,19 @@ Keep responses concise but informative. Use the live data to provide accurate, u
 
     try {
       // Fetch customers data if relevant
-      if (input.includes('customer') || input.includes('client') || input.includes('user')) {
+      if (input.includes('customer') || input.includes('client') || input.includes('user') || 
+          input.includes('shaurya') || input.includes('singh') || input.includes('company') || 
+          input.includes('associated') || input.includes('name')) {
         const customers = await CustomerService.getCustomers();
         const activeCustomers = customers.filter(c => c.status === 'active').length;
         const trialCustomers = customers.filter(c => c.status === 'trial').length;
-        dataContext += `CUSTOMERS: Total ${customers.length} customers (${activeCustomers} active, ${trialCustomers} trial). `;
+        
+        // Include detailed customer information for specific queries
+        const customerDetails = customers.map(customer => 
+          `Name: ${customer.name}, Email: ${customer.email}, Company: ${customer.company}, Status: ${customer.status}`
+        ).join('; ');
+        
+        dataContext += `CUSTOMERS: Total ${customers.length} customers (${activeCustomers} active, ${trialCustomers} trial). Customer details: ${customerDetails}. `;
       }
 
       // Fetch integrations data if relevant
