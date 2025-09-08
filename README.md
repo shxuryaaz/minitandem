@@ -96,4 +96,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-For support, email support@aicopilot.com or join our Discord community.
+For support, email shauryajps@gmail.com or join our Discord community.
