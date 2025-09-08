@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
@@ -26,8 +27,8 @@ const App = () => (
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              {/* Redirect root to login */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              {/* Landing Page */}
+              <Route path="/" element={<Landing />} />
               
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
