@@ -1,5 +1,8 @@
 import { IntegrationService, Integration } from './firestore';
 
+// Backend server configuration
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 export interface IntegrationConfig {
   name: string;
   type: string;
@@ -148,7 +151,7 @@ export class IntegrationManager {
   // Exchange authorization code for access tokens
   private async exchangeCodeForTokens(integrationId: string, code: string): Promise<IntegrationCredentials | null> {
     try {
-      const response = await fetch('/api/integrations/oauth/token', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/oauth/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -271,7 +274,7 @@ export class IntegrationManager {
   private async testSlackIntegration(credentials: IntegrationCredentials): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/test/slack', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/test/slack`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -299,7 +302,7 @@ export class IntegrationManager {
   private async testGoogleDriveIntegration(credentials: IntegrationCredentials): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/test/google-drive', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/test/google-drive`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -327,7 +330,7 @@ export class IntegrationManager {
   private async testNotionIntegration(credentials: IntegrationCredentials): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/test/notion', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/test/notion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -355,7 +358,7 @@ export class IntegrationManager {
   private async testZapierIntegration(credentials: IntegrationCredentials): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/test/zapier', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/test/zapier`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -383,7 +386,7 @@ export class IntegrationManager {
   private async testDiscordIntegration(credentials: IntegrationCredentials): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/test/discord', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/test/discord`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -411,7 +414,7 @@ export class IntegrationManager {
   private async testGoogleAnalyticsIntegration(credentials: IntegrationCredentials): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/test/google-analytics', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/test/google-analytics`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -470,7 +473,7 @@ export class IntegrationManager {
   private async sendSlackMessage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/send/slack', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/send/slack`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -499,7 +502,7 @@ export class IntegrationManager {
   private async sendDiscordMessage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/send/discord', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/send/discord`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -528,7 +531,7 @@ export class IntegrationManager {
   private async createNotionPage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
     try {
       // Use backend proxy to avoid CORS issues
-      const response = await fetch('/api/integrations/send/notion', {
+      const response = await fetch(`${BACKEND_URL}/api/integrations/send/notion`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
