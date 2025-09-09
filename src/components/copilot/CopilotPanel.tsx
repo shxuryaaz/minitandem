@@ -155,9 +155,10 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
   };
 
   const handleSendSlackMessage = async (message: string) => {
+    const loadingToast = toast.loading('Sending message to Slack...');
     try {
-      toast.loading('Sending message to Slack...');
       const success = await integrationManager.sendTestMessage('slack', message);
+      toast.dismiss(loadingToast);
       if (success) {
         toast.success('Message sent to Slack!');
       } else {
@@ -165,6 +166,7 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       }
     } catch (error) {
       console.error('Error sending Slack message:', error);
+      toast.dismiss(loadingToast);
       toast.error('Error sending message to Slack');
     }
   };
