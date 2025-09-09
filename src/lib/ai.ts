@@ -60,8 +60,13 @@ Available actions you can suggest:
 - navigate: Direct users to specific pages/sections
 - demo: Show how to perform actions
 - info: Provide information about features
-- connect: Connect real integrations
+- connect: Connect real integrations OR send messages to connected integrations
 - data: Show live data insights
+
+SPECIAL INSTRUCTIONS FOR SLACK:
+- If the live data shows "SLACK: Connected and ready to send messages", you can suggest sending messages to Slack
+- When users ask to send/post messages to Slack, provide a "Send Slack Message" action button
+- Do NOT give manual instructions if Slack is connected - use the action button instead
 
 Keep responses concise but informative. When users ask about specific customers, companies, or data, always reference the exact information from the live data context above. If the live data doesn't contain the requested information, say so clearly.`;
 
@@ -135,7 +140,11 @@ Keep responses concise but informative. When users ask about specific customers,
       if (input.includes('integration') || input.includes('connect') || input.includes('slack') || input.includes('google')) {
         const integrations = await IntegrationService.getIntegrations(this.currentUserId);
         const connectedIntegrations = integrations.filter(i => i.status === 'connected').length;
+        const slackConnected = integrations.some(i => i.name.toLowerCase() === 'slack' && i.status === 'connected');
         dataContext += `INTEGRATIONS: ${connectedIntegrations} connected out of ${integrations.length} total. `;
+        if (slackConnected) {
+          dataContext += `SLACK: Connected and ready to send messages. `;
+        }
       }
 
       // Fetch analytics data if relevant
