@@ -179,26 +179,26 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     }
   };
 
-  const handleAddCustomer = async (name: string) => {
-    const loadingToast = toast.loading(`Adding customer "${name}"...`);
+  const handleAddCustomer = async (customerData: { name: string; email?: string; company?: string; status?: string }) => {
+    const loadingToast = toast.loading(`Adding customer "${customerData.name}"...`);
     try {
       const customer = await CustomerService.addCustomer({
-        name: name,
-        email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-        company: 'Test Company',
-        status: 'trial',
+        name: customerData.name,
+        email: customerData.email || `${customerData.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        company: customerData.company || 'Test Company',
+        status: customerData.status || 'trial',
         phone: '+1-555-0123',
         notes: `Customer added via AI Copilot`
       });
       
       toast.dismiss(loadingToast);
-      toast.success(`Customer "${name}" added successfully!`);
+      toast.success(`Customer "${customerData.name}" added successfully!`);
       
       // Refresh the conversation to show updated data
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'assistant',
-        content: `Customer "${name}" has been added to your database. You can view all customers in the Customers section.`,
+        content: `Customer "${customerData.name}" has been added to your database with ${customerData.status || 'trial'} status. You can view all customers in the Customers section.`,
         timestamp: new Date()
       }]);
     } catch (error) {
@@ -230,7 +230,12 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
         break;
       case 'data':
         if (action.data?.action === 'add_customer' && action.data?.name) {
-          handleAddCustomer(action.data.name);
+          handleAddCustomer({
+            name: action.data.name,
+            email: action.data.email,
+            company: action.data.company,
+            status: action.data.status
+          });
         } else {
           navigate('/analytics');
           toast.success('Showing live data insights');

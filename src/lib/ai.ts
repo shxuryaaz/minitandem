@@ -209,8 +209,13 @@ Keep responses concise but informative. When users ask about specific customers,
 
     if (input.includes('customer') || input.includes('client')) {
       if (input.includes('add') || input.includes('create') || input.includes('new')) {
-        // Extract customer name if provided
+        // Extract customer details if provided
         let customerName = '';
+        let customerEmail = '';
+        let customerCompany = '';
+        let customerStatus = 'trial'; // default
+        
+        // Extract name
         if (input.includes('named') || input.includes('called')) {
           const nameMatch = input.match(/(?:named|called)\s+([a-zA-Z\s]+?)(?:\s|$)/i);
           if (nameMatch) {
@@ -218,11 +223,36 @@ Keep responses concise but informative. When users ask about specific customers,
           }
         }
         
+        // Extract email
+        const emailMatch = input.match(/email\s+(?:id\s+)?(?:as\s+)?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
+        if (emailMatch) {
+          customerEmail = emailMatch[1].trim();
+        }
+        
+        // Extract company
+        const companyMatch = input.match(/company\s+(?:as\s+)?([a-zA-Z\s]+?)(?:\s|$)/i);
+        if (companyMatch) {
+          customerCompany = companyMatch[1].trim();
+        }
+        
+        // Extract status
+        if (input.includes('active status') || input.includes('active')) {
+          customerStatus = 'active';
+        } else if (input.includes('trial status') || input.includes('trial')) {
+          customerStatus = 'trial';
+        }
+        
         if (customerName) {
           actions.push({
             type: 'data',
             label: `Add Customer "${customerName}"`,
-            data: { action: 'add_customer', name: customerName }
+            data: { 
+              action: 'add_customer', 
+              name: customerName,
+              email: customerEmail,
+              company: customerCompany,
+              status: customerStatus
+            }
           });
         } else {
           actions.push({
