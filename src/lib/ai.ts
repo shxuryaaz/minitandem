@@ -149,8 +149,12 @@ Keep responses concise but informative. When users ask about specific customers,
           console.log('AI Service: No analytics data, fetching customers');
           const customers = await CustomerService.getCustomers();
           console.log('AI Service: Found customers:', customers.length);
-          const recentCustomers = customers.slice(0, 5); // Get 5 most recent
-          dataContext += `RECENT ACTIVITIES: Latest customers - ${recentCustomers.map(c => `${c.name} (${c.company})`).join(', ')}. `;
+          if (customers.length > 0) {
+            const latestCustomer = customers[0]; // First customer is the most recent (sorted by createdAt desc)
+            dataContext += `LATEST CUSTOMER: ${latestCustomer.name} from ${latestCustomer.company} (Status: ${latestCustomer.status}). `;
+            const recentCustomers = customers.slice(0, 5); // Get 5 most recent
+            dataContext += `RECENT ACTIVITIES: Latest customers - ${recentCustomers.map(c => `${c.name} (${c.company})`).join(', ')}. `;
+          }
         }
       }
 
