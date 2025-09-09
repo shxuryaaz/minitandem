@@ -240,10 +240,18 @@ export class IntegrationManager {
       if (!credentials && this.currentUserId) {
         const integrations = await IntegrationService.getIntegrations(this.currentUserId);
         const integration = integrations.find(i => i.name.toLowerCase() === integrationId.toLowerCase());
+        
+        // Only test if integration is actually connected
+        if (!integration || integration.status !== 'connected') {
+          console.log(`Integration ${integrationId} is not connected, skipping test`);
+          return false;
+        }
+        
         credentials = integration?.config as IntegrationCredentials;
       }
 
-      if (!credentials) {
+      if (!credentials || Object.keys(credentials).length === 0) {
+        console.log(`No credentials available for ${integrationId}`);
         return false;
       }
 

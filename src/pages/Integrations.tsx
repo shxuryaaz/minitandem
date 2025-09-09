@@ -125,6 +125,13 @@ export default function Integrations() {
       setTesting(prev => new Set(prev).add(integrationId));
       toast.loading(`Testing ${integrationId}...`);
       
+      // Check if integration is actually connected before testing
+      const status = getIntegrationStatus(integrationId);
+      if (status !== 'connected') {
+        toast.error(`${integrationId} is not connected. Please connect it first.`);
+        return;
+      }
+      
       const success = await integrationManager.testIntegration(integrationId);
       if (success) {
         toast.success(`${integrationId} test passed!`);
@@ -145,6 +152,13 @@ export default function Integrations() {
 
   const handleSendTestMessage = async (integrationId: string) => {
     try {
+      // Check if integration is actually connected before sending
+      const status = getIntegrationStatus(integrationId);
+      if (status !== 'connected') {
+        toast.error(`${integrationId} is not connected. Please connect it first.`);
+        return;
+      }
+      
       toast.loading(`Sending test message to ${integrationId}...`);
       const success = await integrationManager.sendTestMessage(integrationId, "Hello from MiniTandem! This is a test message.");
       if (success) {
