@@ -64,9 +64,10 @@ Available actions you can suggest:
 - data: Show live data insights
 
 SPECIAL INSTRUCTIONS FOR SLACK:
-- If the live data shows "SLACK: Connected and ready to send messages", you can suggest sending messages to Slack
-- When users ask to send/post messages to Slack, provide a "Send Slack Message" action button
+- If the live data shows "SLACK: Connected and ready to send messages", you can send messages directly
+- When users ask to send/post messages to Slack, provide a specific action button with the exact message
 - Do NOT give manual instructions if Slack is connected - use the action button instead
+- Extract the message content from the user's request and include it in the action
 
 Keep responses concise but informative. When users ask about specific customers, companies, or data, always reference the exact information from the live data context above. If the live data doesn't contain the requested information, say so clearly.`;
 
@@ -229,16 +230,27 @@ Keep responses concise but informative. When users ask about specific customers,
       });
     }
 
-    // Slack message actions
-    if (input.includes('post') || input.includes('send') || input.includes('message')) {
-      if (input.includes('slack') || input.includes('#general') || input.includes('channel')) {
-        actions.push({
-          type: 'connect',
-          label: 'Send Slack Message',
-          data: { integration: 'slack', action: 'send_message', message: input }
-        });
+      // Slack message actions
+      if (input.includes('post') || input.includes('send') || input.includes('message')) {
+        if (input.includes('slack') || input.includes('#general') || input.includes('channel')) {
+          // Extract the actual message content
+          let messageContent = '';
+          if (input.includes('saying')) {
+            const sayingIndex = input.indexOf('saying');
+            messageContent = input.substring(sayingIndex + 6).trim();
+          } else if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
+            messageContent = input.match(/(hello|hi|hey)/i)?.[0] || 'Hello';
+          } else {
+            messageContent = 'Hello from MiniTandem!';
+          }
+          
+          actions.push({
+            type: 'connect',
+            label: `Send "${messageContent}" to #general`,
+            data: { integration: 'slack', action: 'send_message', message: messageContent }
+          });
+        }
       }
-    }
 
     // Integration connection actions
     if (input.includes('connect') || input.includes('integration') || input.includes('slack') || input.includes('google')) {
