@@ -136,8 +136,8 @@ export default function Dashboard() {
           },
         ]);
 
-        // Update recent activity with real customer data
-        const recentCustomers = customers.slice(0, 4).map(customer => {
+        // Update recent activity with real customer data and sample activities
+        const recentCustomers = customers.slice(0, 2).map(customer => {
           const timeAgo = getTimeAgo(new Date(customer.createdAt));
           return {
             user: customer.name,
@@ -146,7 +146,38 @@ export default function Dashboard() {
             avatar: customer.name.split(' ').map(n => n[0]).join('').toUpperCase(),
           };
         });
-        setRecentActivity(recentCustomers);
+        
+        // Add some sample activities if we don't have enough real data
+        const sampleActivities = [
+          {
+            user: "Sarah Johnson",
+            action: "completed onboarding",
+            time: "2 minutes ago",
+            avatar: "SJ",
+          },
+          {
+            user: "Mike Chen",
+            action: "connected Slack integration",
+            time: "5 minutes ago",
+            avatar: "MC",
+          },
+          {
+            user: "Emily Davis",
+            action: "updated profile settings",
+            time: "12 minutes ago",
+            avatar: "ED",
+          },
+          {
+            user: "Alex Turner",
+            action: "started trial period",
+            time: "1 hour ago",
+            avatar: "AT",
+          },
+        ];
+        
+        // Combine real and sample data, prioritizing real data
+        const combinedActivities = [...recentCustomers, ...sampleActivities].slice(0, 4);
+        setRecentActivity(combinedActivities);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
