@@ -59,6 +59,18 @@ export function Header() {
       className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50"
     >
       <div className="flex h-16 items-center gap-4 px-6 w-full">
+        {/* Logo */}
+        <div className="flex items-center space-x-3 mr-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden">
+            <img 
+              src="https://i.ibb.co/ynbPz6cH/logo.png" 
+              alt="MiniTandem Logo" 
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <span className="text-xl font-bold text-foreground">MiniTandem</span>
+        </div>
+        
         {/* Search - spans full width */}
         <div className="flex-1">
           <form onSubmit={handleSearch} className="relative">
