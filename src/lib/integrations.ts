@@ -38,7 +38,7 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     setupUrl: 'https://api.slack.com/apps',
     oauthUrl: 'https://slack.com/oauth/v2/authorize',
     scopes: ['chat:write', 'channels:read', 'groups:read', 'im:read', 'mpim:read'],
-    clientId: process.env.VITE_SLACK_CLIENT_ID || 'your-slack-client-id',
+    clientId: import.meta.env.VITE_SLACK_CLIENT_ID || 'your-slack-client-id',
   },
   'google-drive': {
     name: 'Google Drive',
@@ -48,7 +48,7 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     setupUrl: 'https://console.developers.google.com/',
     oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     scopes: ['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive.readonly'],
-    clientId: process.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
+    clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
   },
   notion: {
     name: 'Notion',
@@ -58,7 +58,7 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     setupUrl: 'https://www.notion.so/my-integrations',
     oauthUrl: 'https://api.notion.com/v1/oauth/authorize',
     scopes: ['read', 'write', 'update'],
-    clientId: process.env.VITE_NOTION_CLIENT_ID || 'your-notion-client-id',
+    clientId: import.meta.env.VITE_NOTION_CLIENT_ID || 'your-notion-client-id',
   },
   zapier: {
     name: 'Zapier',
@@ -68,7 +68,7 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     setupUrl: 'https://zapier.com/apps',
     oauthUrl: 'https://zapier.com/oauth/authorize',
     scopes: ['read', 'write'],
-    clientId: process.env.VITE_ZAPIER_CLIENT_ID || 'your-zapier-client-id',
+    clientId: import.meta.env.VITE_ZAPIER_CLIENT_ID || 'your-zapier-client-id',
   },
   discord: {
     name: 'Discord',
@@ -78,7 +78,7 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     setupUrl: 'https://discord.com/developers/applications',
     oauthUrl: 'https://discord.com/api/oauth2/authorize',
     scopes: ['bot', 'messages:send', 'channels:read'],
-    clientId: process.env.VITE_DISCORD_CLIENT_ID || 'your-discord-client-id',
+    clientId: import.meta.env.VITE_DISCORD_CLIENT_ID || 'your-discord-client-id',
   },
   'google-analytics': {
     name: 'Google Analytics',
@@ -88,7 +88,7 @@ export const AVAILABLE_INTEGRATIONS: Record<string, IntegrationConfig> = {
     setupUrl: 'https://analytics.google.com/',
     oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
-    clientId: process.env.VITE_GOOGLE_ANALYTICS_CLIENT_ID || 'your-google-analytics-client-id',
+    clientId: import.meta.env.VITE_GOOGLE_ANALYTICS_CLIENT_ID || 'your-google-analytics-client-id',
   },
 };
 

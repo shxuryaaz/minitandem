@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:8080', 'https://minitandem.vercel.app'],
+  origin: ['http://localhost:8080', 'https://minitandem.vercel.app', 'https://minitandem-git-main-shxuryaaz.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
