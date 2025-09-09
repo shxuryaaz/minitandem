@@ -487,6 +487,14 @@ export class IntegrationManager {
   // Send message to Slack
   private async sendSlackMessage(credentials: IntegrationCredentials, message: string): Promise<boolean> {
     try {
+      console.log('Sending Slack message:', { 
+        backendUrl: BACKEND_URL,
+        hasBotToken: !!credentials.botToken,
+        hasAccessToken: !!credentials.accessToken,
+        message: message,
+        channel: credentials.channelId || '#general'
+      });
+      
       // Use backend proxy to avoid CORS issues
       const response = await fetch(`${BACKEND_URL}/api/integrations/send/slack`, {
         method: 'POST',
@@ -500,12 +508,16 @@ export class IntegrationManager {
         }),
       });
       
+      console.log('Slack message response status:', response.status);
+      
       if (!response.ok) {
-        console.error('Backend not available for Slack messaging');
+        const errorText = await response.text();
+        console.error('Backend error for Slack messaging:', errorText);
         return false;
       }
       
       const data = await response.json();
+      console.log('Slack message response data:', data);
       return data.success === true;
     } catch (error) {
       console.error('Slack message error:', error);
