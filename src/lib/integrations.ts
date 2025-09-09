@@ -518,6 +518,11 @@ export class IntegrationManager {
       
       const data = await response.json();
       console.log('Slack message response data:', data);
+      
+      if (!data.success) {
+        console.error('Slack API error details:', data.data);
+      }
+      
       return data.success === true;
     } catch (error) {
       console.error('Slack message error:', error);

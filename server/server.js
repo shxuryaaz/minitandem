@@ -173,6 +173,12 @@ app.post('/api/integrations/send/slack', async (req, res) => {
     }
 
     const token = credentials.botToken || credentials.accessToken;
+    console.log('Slack API request:', {
+      channel: channel || credentials.channelId || '#general',
+      message: message,
+      tokenPreview: token.substring(0, 10) + '...'
+    });
+
     const response = await axios.post('https://slack.com/api/chat.postMessage', {
       channel: channel || credentials.channelId || '#general',
       text: message,
@@ -181,6 +187,12 @@ app.post('/api/integrations/send/slack', async (req, res) => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
+    });
+
+    console.log('Slack API response:', {
+      ok: response.data.ok,
+      error: response.data.error,
+      fullResponse: response.data
     });
 
     res.json({ success: response.data.ok === true, data: response.data });
