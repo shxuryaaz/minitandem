@@ -140,6 +140,9 @@ export class IntegrationManager {
         throw new Error('Invalid OAuth state');
       }
 
+      // Set the current user ID for this operation
+      this.currentUserId = userId;
+
       const credentials = await this.exchangeCodeForTokens(integrationId, code);
       if (!credentials) {
         throw new Error('Failed to exchange code for tokens');
