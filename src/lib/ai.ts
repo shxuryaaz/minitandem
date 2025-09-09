@@ -71,6 +71,13 @@ SPECIAL INSTRUCTIONS FOR SLACK:
 - Keep responses simple and clean - NO YAML formatting or code blocks
 - Just say "I can send your message to #general in Slack" and provide the action button
 
+SPECIAL INSTRUCTIONS FOR CUSTOMER MANAGEMENT:
+- You CAN directly add new customers to the platform
+- When users ask to "add a new customer named [name]", provide an action button to add that customer
+- Do NOT give manual instructions - use the action button instead
+- Extract the customer name from requests like "add customer named Testing" or "create a customer called John"
+- Say "I can add the customer [name] for you" and provide the action button
+
 Keep responses concise but informative. When users ask about specific customers, companies, or data, always reference the exact information from the live data context above. If the live data doesn't contain the requested information, say so clearly.`;
 
       const response = await openai.chat.completions.create({
