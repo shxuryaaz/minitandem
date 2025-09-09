@@ -68,6 +68,8 @@ SPECIAL INSTRUCTIONS FOR SLACK:
 - When users ask to send/post messages to Slack, provide a specific action button with the exact message
 - Do NOT give manual instructions if Slack is connected - use the action button instead
 - Extract the message content from the user's request and include it in the action
+- Keep responses simple and clean - NO YAML formatting or code blocks
+- Just say "I can send your message to #general in Slack" and provide the action button
 
 Keep responses concise but informative. When users ask about specific customers, companies, or data, always reference the exact information from the live data context above. If the live data doesn't contain the requested information, say so clearly.`;
 
