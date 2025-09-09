@@ -274,7 +274,11 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
       <div className="bg-gradient-to-r from-primary to-copilot-primary p-4 text-white flex-shrink-0 relative">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <span className="text-lg">🤖</span>
+            <img 
+              src="/logo.png" 
+              alt="MiniTandem" 
+              className="h-5 w-5 object-contain"
+            />
           </div>
           <div className="flex-1">
             <h3 className="font-semibold">AI Copilot</h3>
