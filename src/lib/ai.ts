@@ -106,6 +106,7 @@ Keep responses concise but informative. When users ask about specific customers,
 
   private async fetchRelevantData(userInput: string): Promise<string> {
     if (!this.currentUserId) {
+      console.log('AI Service: No user ID available');
       return "No user context available.";
     }
 
@@ -113,6 +114,7 @@ Keep responses concise but informative. When users ask about specific customers,
     let dataContext = "";
 
     try {
+      console.log('AI Service: Fetching data for input:', input);
       // Fetch customers data if relevant
       if (input.includes('customer') || input.includes('client') || input.includes('user') || 
           input.includes('shaurya') || input.includes('singh') || input.includes('company') || 
@@ -144,7 +146,9 @@ Keep responses concise but informative. When users ask about specific customers,
           dataContext += `ANALYTICS: ${analytics.metrics.totalUsers} total users, ${analytics.metrics.activeUsers} active, ${analytics.metrics.newSignups} new signups today. `;
         } else {
           // If no today's analytics, get recent customer activities
+          console.log('AI Service: No analytics data, fetching customers');
           const customers = await CustomerService.getCustomers();
+          console.log('AI Service: Found customers:', customers.length);
           const recentCustomers = customers.slice(0, 5); // Get 5 most recent
           dataContext += `RECENT ACTIVITIES: Latest customers - ${recentCustomers.map(c => `${c.name} (${c.company})`).join(', ')}. `;
         }
