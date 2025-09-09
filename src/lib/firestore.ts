@@ -314,6 +314,48 @@ export class UserActivityService {
   }
 }
 
+// Clean up sample integrations
+const cleanupSampleIntegrations = async (userId: string) => {
+  try {
+    const integrations = await IntegrationService.getIntegrations(userId);
+    const sampleIntegrations = integrations.filter(integration => 
+      (integration.name === 'Slack' || integration.name === 'Google Drive') &&
+      integration.status === 'connected' &&
+      (!integration.config || Object.keys(integration.config).length === 0 || 
+       (integration.config as any).channel === '#general' || 
+       (integration.config as any).folder === 'MiniTandem')
+    );
+    
+    for (const integration of sampleIntegrations) {
+      await IntegrationService.deleteIntegration(integration.id);
+      console.log(`Cleaned up sample integration: ${integration.name}`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up sample integrations:', error);
+  }
+};
+
+// Manual cleanup function for immediate removal of fake integrations
+export const cleanupFakeIntegrations = async (userId: string) => {
+  try {
+    const integrations = await IntegrationService.getIntegrations(userId);
+    const fakeIntegrations = integrations.filter(integration => 
+      integration.status === 'connected' &&
+      (!integration.config || Object.keys(integration.config).length === 0)
+    );
+    
+    for (const integration of fakeIntegrations) {
+      await IntegrationService.deleteIntegration(integration.id);
+      console.log(`Removed fake integration: ${integration.name}`);
+    }
+    
+    return fakeIntegrations.length;
+  } catch (error) {
+    console.error('Error cleaning up fake integrations:', error);
+    return 0;
+  }
+};
+
 // Initialize sample data
 export const initializeSampleData = async (userId: string) => {
   try {
@@ -356,27 +398,9 @@ export const initializeSampleData = async (userId: string) => {
       await CustomerService.addCustomer(customer);
     }
 
-    // Add sample integrations
-    const sampleIntegrations = [
-      {
-        name: 'Slack',
-        type: 'communication',
-        status: 'connected' as const,
-        userId,
-        config: { channel: '#general' }
-      },
-      {
-        name: 'Google Drive',
-        type: 'storage',
-        status: 'connected' as const,
-        userId,
-        config: { folder: 'MiniTandem' }
-      }
-    ];
-
-    for (const integration of sampleIntegrations) {
-      await IntegrationService.addIntegration(integration);
-    }
+    // Note: No sample integrations - users should connect real integrations
+    // Clean up any existing sample integrations
+    await cleanupSampleIntegrations(userId);
 
     // Add sample analytics
     const today = new Date().toISOString().split('T')[0];

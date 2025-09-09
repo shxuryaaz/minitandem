@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { integrationManager, IntegrationConfig } from "@/lib/integrations";
-import { IntegrationService, Integration } from "@/lib/firestore";
+import { IntegrationService, Integration, cleanupFakeIntegrations } from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -172,6 +172,22 @@ export default function Integrations() {
     }
   };
 
+  const handleCleanupFakeIntegrations = async () => {
+    try {
+      toast.loading('Cleaning up fake integrations...');
+      const removedCount = await cleanupFakeIntegrations(currentUser!.uid);
+      if (removedCount > 0) {
+        toast.success(`Removed ${removedCount} fake integration(s)`);
+        loadIntegrations(); // Reload the list
+      } else {
+        toast.info('No fake integrations found');
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast.error('Failed to cleanup fake integrations');
+    }
+  };
+
   const getStatusBadge = (status: 'connected' | 'disconnected' | 'error') => {
     switch (status) {
       case 'connected':
@@ -219,10 +235,16 @@ export default function Integrations() {
             Connect your favorite tools to streamline your workflow
           </p>
         </div>
-        <Button onClick={loadIntegrations} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleCleanupFakeIntegrations} variant="outline" size="sm">
+            <X className="h-4 w-4 mr-2" />
+            Cleanup Fake
+          </Button>
+          <Button onClick={loadIntegrations} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
