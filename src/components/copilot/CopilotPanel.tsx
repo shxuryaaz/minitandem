@@ -158,16 +158,23 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     const loadingToast = toast.loading('Sending message to Slack...');
     try {
       const success = await integrationManager.sendTestMessage('slack', message);
+      // Always dismiss the loading toast first
       toast.dismiss(loadingToast);
-      if (success) {
-        toast.success('Message sent to Slack!');
-      } else {
-        toast.error('Failed to send message to Slack');
-      }
+      
+      // Small delay to ensure loading toast is dismissed
+      setTimeout(() => {
+        if (success) {
+          toast.success('Message sent to Slack!');
+        } else {
+          toast.error('Failed to send message to Slack');
+        }
+      }, 100);
     } catch (error) {
       console.error('Error sending Slack message:', error);
       toast.dismiss(loadingToast);
-      toast.error('Error sending message to Slack');
+      setTimeout(() => {
+        toast.error('Error sending message to Slack');
+      }, 100);
     }
   };
 

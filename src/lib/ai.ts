@@ -238,6 +238,13 @@ Keep responses concise but informative. When users ask about specific customers,
           if (input.includes('saying')) {
             const sayingIndex = input.indexOf('saying');
             messageContent = input.substring(sayingIndex + 6).trim();
+          } else if (input.includes('send') && input.includes('to')) {
+            // Extract message between "send" and "to"
+            const sendIndex = input.indexOf('send');
+            const toIndex = input.indexOf('to');
+            if (sendIndex !== -1 && toIndex !== -1 && toIndex > sendIndex) {
+              messageContent = input.substring(sendIndex + 4, toIndex).trim();
+            }
           } else if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
             messageContent = input.match(/(hello|hi|hey)/i)?.[0] || 'Hello';
           } else {
