@@ -154,6 +154,21 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     }
   };
 
+  const handleSendSlackMessage = async (message: string) => {
+    try {
+      toast.loading('Sending message to Slack...');
+      const success = await integrationManager.sendTestMessage('slack', message);
+      if (success) {
+        toast.success('Message sent to Slack!');
+      } else {
+        toast.error('Failed to send message to Slack');
+      }
+    } catch (error) {
+      console.error('Error sending Slack message:', error);
+      toast.error('Error sending message to Slack');
+    }
+  };
+
   const handleAction = (action: { type: "navigate" | "demo" | "info" | "connect" | "data"; label: string; data?: any }) => {
     switch (action.type) {
       case 'navigate':
@@ -166,6 +181,9 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
         if (action.data?.action === 'connect_integration' && action.data?.integration) {
           // Actually connect the integration
           handleConnectIntegration(action.data.integration);
+        } else if (action.data?.action === 'send_message' && action.data?.integration === 'slack') {
+          // Send Slack message
+          handleSendSlackMessage(action.data.message);
         } else {
           navigate('/integrations');
           toast.success('Opening integrations page');

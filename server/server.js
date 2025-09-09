@@ -290,6 +290,10 @@ app.post('/api/integrations/oauth/token', async (req, res) => {
           client_secret: process.env.SLACK_CLIENT_SECRET,
           code: code,
           redirect_uri: redirectUri
+        }, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
         });
         
         console.log('Slack OAuth response:', { 

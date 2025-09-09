@@ -220,9 +220,20 @@ Keep responses concise but informative. When users ask about specific customers,
       });
     }
 
+    // Slack message actions
+    if (input.includes('post') || input.includes('send') || input.includes('message')) {
+      if (input.includes('slack') || input.includes('#general') || input.includes('channel')) {
+        actions.push({
+          type: 'connect',
+          label: 'Send Slack Message',
+          data: { integration: 'slack', action: 'send_message', message: input }
+        });
+      }
+    }
+
     // Integration connection actions
     if (input.includes('connect') || input.includes('integration') || input.includes('slack') || input.includes('google')) {
-      if (input.includes('slack')) {
+      if (input.includes('slack') && !input.includes('post') && !input.includes('send')) {
         actions.push({
           type: 'connect',
           label: 'Connect Slack',
