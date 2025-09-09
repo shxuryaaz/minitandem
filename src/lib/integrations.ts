@@ -1,7 +1,7 @@
 import { IntegrationService, Integration } from './firestore';
 
 // Backend server configuration
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'https://server-7onn74s9r-shauryas-projects-5bb958c2.vercel.app';
 
 // Debug logging
 console.log('Backend URL:', BACKEND_URL);

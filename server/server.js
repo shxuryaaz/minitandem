@@ -263,43 +263,96 @@ app.post('/api/integrations/oauth/token', async (req, res) => {
   try {
     const { integrationId, code, redirectUri } = req.body;
     
-    // This is a placeholder - in a real implementation, you'd exchange the code for tokens
-    // For now, we'll return mock credentials to demonstrate the flow
-    const mockCredentials = {
-      slack: {
-        accessToken: `mock-slack-token-${Date.now()}`,
-        botToken: `mock-bot-token-${Date.now()}`,
-        workspaceId: 'T1234567890',
-        channelId: 'C1234567890',
-      },
-      'google-drive': {
-        accessToken: `mock-google-access-token-${Date.now()}`,
-        refreshToken: `mock-google-refresh-token-${Date.now()}`,
-      },
-      notion: {
-        apiKey: `secret_mock-notion-api-key-${Date.now()}`,
-        databaseId: 'mock-database-id',
-      },
-      zapier: {
-        accessToken: `mock-zapier-access-token-${Date.now()}`,
-        webhookUrl: 'https://hooks.zapier.com/mock-webhook',
-      },
-      discord: {
-        accessToken: `mock-discord-access-token-${Date.now()}`,
-        botToken: `mock-discord-bot-token-${Date.now()}`,
-      },
-      'google-analytics': {
-        accessToken: `mock-ga-access-token-${Date.now()}`,
-        refreshToken: `mock-ga-refresh-token-${Date.now()}`,
-      },
-    };
-
-    const credentials = mockCredentials[integrationId] || {};
+    console.log('OAuth token exchange request:', { integrationId, code: code?.substring(0, 10) + '...', redirectUri });
+    
+    let credentials = {};
+    
+    switch (integrationId) {
+      case 'slack':
+        // Real Slack OAuth token exchange
+        console.log('Exchanging Slack OAuth code...', { 
+          clientId: process.env.SLACK_CLIENT_ID ? 'SET' : 'NOT_SET',
+          clientSecret: process.env.SLACK_CLIENT_SECRET ? 'SET' : 'NOT_SET'
+        });
+        
+        if (!process.env.SLACK_CLIENT_ID || !process.env.SLACK_CLIENT_SECRET) {
+          throw new Error('Slack OAuth credentials not configured. Please set SLACK_CLIENT_ID and SLACK_CLIENT_SECRET environment variables.');
+        }
+        
+        console.log('Making Slack OAuth request with:', {
+          client_id: process.env.SLACK_CLIENT_ID?.substring(0, 10) + '...',
+          code: code?.substring(0, 10) + '...',
+          redirect_uri: redirectUri
+        });
+        
+        const slackResponse = await axios.post('https://slack.com/api/oauth.v2.access', {
+          client_id: process.env.SLACK_CLIENT_ID,
+          client_secret: process.env.SLACK_CLIENT_SECRET,
+          code: code,
+          redirect_uri: redirectUri
+        });
+        
+        console.log('Slack OAuth response:', { 
+          ok: slackResponse.data.ok, 
+          error: slackResponse.data.error,
+          fullResponse: slackResponse.data
+        });
+        
+        if (!slackResponse.data.ok) {
+          const errorMsg = slackResponse.data.error || 'Slack OAuth failed';
+          console.error('Slack OAuth error details:', {
+            error: errorMsg,
+            code: code?.substring(0, 10) + '...',
+            redirectUri: redirectUri,
+            clientId: process.env.SLACK_CLIENT_ID?.substring(0, 10) + '...'
+          });
+          throw new Error(errorMsg);
+        }
+        
+        credentials = {
+          accessToken: slackResponse.data.access_token,
+          botToken: slackResponse.data.bot_user_oauth_access_token,
+          workspaceId: slackResponse.data.team.id,
+          channelId: slackResponse.data.incoming_webhook?.channel_id
+        };
+        
+        console.log('Slack credentials created:', { 
+          hasAccessToken: !!credentials.accessToken,
+          hasBotToken: !!credentials.botToken,
+          workspaceId: credentials.workspaceId
+        });
+        break;
+        
+      case 'google-drive':
+        // Real Google Drive OAuth token exchange
+        if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+          throw new Error('Google OAuth credentials not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
+        }
+        
+        const googleResponse = await axios.post('https://oauth2.googleapis.com/token', {
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          code: code,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri
+        });
+        
+        credentials = {
+          accessToken: googleResponse.data.access_token,
+          refreshToken: googleResponse.data.refresh_token,
+          folderId: 'root'
+        };
+        break;
+        
+      default:
+        return res.status(400).json({ success: false, error: 'Unsupported integration' });
+    }
+    
+    console.log('OAuth token exchange successful:', { integrationId, hasCredentials: Object.keys(credentials).length > 0 });
     
     res.json({ 
       success: true, 
-      credentials,
-      message: `Mock credentials generated for ${integrationId}. In production, this would exchange the OAuth code for real tokens.`
+      credentials
     });
   } catch (error) {
     console.error('OAuth token exchange error:', error);
@@ -307,9 +360,49 @@ app.post('/api/integrations/oauth/token', async (req, res) => {
   }
 });
 
+// Test OAuth endpoint
+app.post('/api/integrations/oauth/test', async (req, res) => {
+  try {
+    const { integrationId } = req.body;
+    
+    if (integrationId === 'slack') {
+      if (!process.env.SLACK_CLIENT_ID || !process.env.SLACK_CLIENT_SECRET) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Slack OAuth credentials not configured',
+          details: {
+            SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID ? 'SET' : 'NOT_SET',
+            SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET ? 'SET' : 'NOT_SET'
+          }
+        });
+      }
+      
+      return res.json({ 
+        success: true, 
+        message: 'Slack OAuth credentials are configured',
+        clientId: process.env.SLACK_CLIENT_ID.substring(0, 10) + '...'
+      });
+    }
+    
+    res.json({ success: false, error: 'Unsupported integration' });
+  } catch (error) {
+    console.error('OAuth test error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: {
+      SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID ? 'SET' : 'NOT_SET',
+      SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET ? 'SET' : 'NOT_SET',
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT_SET',
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT_SET'
+    }
+  });
 });
 
 app.listen(PORT, () => {

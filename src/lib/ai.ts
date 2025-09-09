@@ -137,10 +137,16 @@ Keep responses concise but informative. When users ask about specific customers,
       }
 
       // Fetch analytics data if relevant
-      if (input.includes('analytics') || input.includes('data') || input.includes('metrics') || input.includes('dashboard')) {
+      if (input.includes('analytics') || input.includes('data') || input.includes('metrics') || input.includes('dashboard') || 
+          input.includes('recent') || input.includes('activity') || input.includes('activities')) {
         const analytics = await AnalyticsService.getTodayAnalytics();
         if (analytics) {
           dataContext += `ANALYTICS: ${analytics.metrics.totalUsers} total users, ${analytics.metrics.activeUsers} active, ${analytics.metrics.newSignups} new signups today. `;
+        } else {
+          // If no today's analytics, get recent customer activities
+          const customers = await CustomerService.getCustomers();
+          const recentCustomers = customers.slice(0, 5); // Get 5 most recent
+          dataContext += `RECENT ACTIVITIES: Latest customers - ${recentCustomers.map(c => `${c.name} (${c.company})`).join(', ')}. `;
         }
       }
 
