@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { integrationManager, IntegrationConfig } from "@/lib/integrations";
-import { IntegrationService, Integration, cleanupFakeIntegrations } from "@/lib/firestore";
+import { IntegrationService, Integration, cleanupFakeIntegrations, removeAllIntegrations } from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -188,6 +188,22 @@ export default function Integrations() {
     }
   };
 
+  const handleRemoveAllIntegrations = async () => {
+    if (!confirm('Are you sure you want to remove ALL integrations? This cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      toast.loading('Removing all integrations...');
+      const removedCount = await removeAllIntegrations(currentUser!.uid);
+      toast.success(`Removed ${removedCount} integration(s)`);
+      loadIntegrations(); // Reload the list
+    } catch (error) {
+      console.error('Remove all error:', error);
+      toast.error('Failed to remove all integrations');
+    }
+  };
+
   const getStatusBadge = (status: 'connected' | 'disconnected' | 'error') => {
     switch (status) {
       case 'connected':
@@ -239,6 +255,10 @@ export default function Integrations() {
           <Button onClick={handleCleanupFakeIntegrations} variant="outline" size="sm">
             <X className="h-4 w-4 mr-2" />
             Cleanup Fake
+          </Button>
+          <Button onClick={handleRemoveAllIntegrations} variant="destructive" size="sm">
+            <X className="h-4 w-4 mr-2" />
+            Remove All
           </Button>
           <Button onClick={loadIntegrations} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />

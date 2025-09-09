@@ -335,14 +335,43 @@ const cleanupSampleIntegrations = async (userId: string) => {
   }
 };
 
+// Nuclear option - remove ALL integrations
+export const removeAllIntegrations = async (userId: string) => {
+  try {
+    const integrations = await IntegrationService.getIntegrations(userId);
+    console.log('Removing ALL integrations:', integrations);
+    
+    for (const integration of integrations) {
+      await IntegrationService.deleteIntegration(integration.id);
+      console.log(`Removed integration: ${integration.name}`);
+    }
+    
+    return integrations.length;
+  } catch (error) {
+    console.error('Error removing all integrations:', error);
+    return 0;
+  }
+};
+
 // Manual cleanup function for immediate removal of fake integrations
 export const cleanupFakeIntegrations = async (userId: string) => {
   try {
     const integrations = await IntegrationService.getIntegrations(userId);
-    const fakeIntegrations = integrations.filter(integration => 
-      integration.status === 'connected' &&
-      (!integration.config || Object.keys(integration.config).length === 0)
-    );
+    console.log('All integrations found:', integrations);
+    
+    // Remove ALL integrations that are marked as connected but have no real credentials
+    const fakeIntegrations = integrations.filter(integration => {
+      const hasRealCredentials = integration.config && 
+        Object.keys(integration.config).length > 0 &&
+        !((integration.config as any).channel === '#general') &&
+        !((integration.config as any).folder === 'MiniTandem');
+      
+      console.log(`Integration ${integration.name}: status=${integration.status}, hasRealCredentials=${hasRealCredentials}, config=`, integration.config);
+      
+      return integration.status === 'connected' && !hasRealCredentials;
+    });
+    
+    console.log('Fake integrations to remove:', fakeIntegrations);
     
     for (const integration of fakeIntegrations) {
       await IntegrationService.deleteIntegration(integration.id);
