@@ -201,11 +201,36 @@ Keep responses concise but informative. When users ask about specific customers,
     }
 
     if (input.includes('customer') || input.includes('client')) {
-      actions.push({
-        type: 'navigate',
-        label: 'View Customers',
-        data: { path: '/customers' }
-      });
+      if (input.includes('add') || input.includes('create') || input.includes('new')) {
+        // Extract customer name if provided
+        let customerName = '';
+        if (input.includes('named') || input.includes('called')) {
+          const nameMatch = input.match(/(?:named|called)\s+([a-zA-Z\s]+?)(?:\s|$)/i);
+          if (nameMatch) {
+            customerName = nameMatch[1].trim();
+          }
+        }
+        
+        if (customerName) {
+          actions.push({
+            type: 'data',
+            label: `Add Customer "${customerName}"`,
+            data: { action: 'add_customer', name: customerName }
+          });
+        } else {
+          actions.push({
+            type: 'navigate',
+            label: 'Add New Customer',
+            data: { path: '/customers' }
+          });
+        }
+      } else {
+        actions.push({
+          type: 'navigate',
+          label: 'View Customers',
+          data: { path: '/customers' }
+        });
+      }
     }
 
     if (input.includes('integration') || input.includes('connect')) {

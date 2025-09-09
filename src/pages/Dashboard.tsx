@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import {
   Users,
   TrendingUp,
@@ -11,73 +12,163 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { CustomerService, AnalyticsService } from "@/lib/firestore";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
-const stats = [
-  {
-    title: "Total Customers",
-    value: "2,847",
-    change: "+12.5%",
-    trend: "up",
-    icon: Users,
-  },
-  {
-    title: "Active Sessions",
-    value: "1,429",
-    change: "+8.2%",
-    trend: "up",
-    icon: Activity,
-  },
-  {
-    title: "Completion Rate",
-    value: "94.2%",
-    change: "+2.1%",
-    trend: "up",
-    icon: TrendingUp,
-  },
-  {
-    title: "Revenue",
-    value: "$47,829",
-    change: "-3.4%",
-    trend: "down",
-    icon: DollarSign,
-  },
-];
+// Helper function to get time ago
+const getTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+};
 
-const recentActivity = [
-  {
-    user: "Sarah Johnson",
-    action: "completed onboarding",
-    time: "2 minutes ago",
-    avatar: "SJ",
-  },
-  {
-    user: "Mike Chen",
-    action: "connected Slack integration",
-    time: "5 minutes ago",
-    avatar: "MC",
-  },
-  {
-    user: "Emily Davis",
-    action: "updated profile settings",
-    time: "12 minutes ago",
-    avatar: "ED",
-  },
-  {
-    user: "Alex Turner",
-    action: "started trial period",
-    time: "1 hour ago",
-    avatar: "AT",
-  },
-];
+// This will be replaced with real data
 
-const quickActions = [
-  { title: "Add Customer", description: "Invite new users to platform" },
-  { title: "Setup Integration", description: "Connect external services" },
-  { title: "View Analytics", description: "Check performance metrics" },
-  { title: "Manage Settings", description: "Configure platform options" },
-];
+// Quick actions will be defined in the component with proper handlers
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState([
+    {
+      title: "Total Customers",
+      value: "0",
+      change: "+0%",
+      trend: "up",
+      icon: Users,
+    },
+    {
+      title: "New This Month",
+      value: "0",
+      change: "+0%",
+      trend: "up",
+      icon: Activity,
+    },
+    {
+      title: "Engagement Rate",
+      value: "0%",
+      change: "+0%",
+      trend: "up",
+      icon: TrendingUp,
+    },
+    {
+      title: "Active Users",
+      value: "0",
+      change: "+0%",
+      trend: "up",
+      icon: DollarSign,
+    },
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState([]);
+
+  // Quick actions with handlers
+  const quickActions = [
+    { 
+      title: "Add Customer", 
+      description: "Invite new users to platform",
+      onClick: () => navigate('/customers')
+    },
+    { 
+      title: "Setup Integration", 
+      description: "Connect external services",
+      onClick: () => navigate('/integrations')
+    },
+    { 
+      title: "View Analytics", 
+      description: "Check performance metrics",
+      onClick: () => navigate('/analytics')
+    },
+    { 
+      title: "Manage Settings", 
+      description: "Configure platform options",
+      onClick: () => navigate('/settings')
+    },
+  ];
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch customers
+        const customers = await CustomerService.getCustomers();
+        const totalCustomers = customers.length;
+        
+        // Calculate new customers this month
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const newThisMonth = customers.filter(customer => {
+          const customerDate = new Date(customer.createdAt);
+          return customerDate.getMonth() === currentMonth && customerDate.getFullYear() === currentYear;
+        }).length;
+        
+        // Fetch analytics
+        const analytics = await AnalyticsService.getTodayAnalytics();
+        const engagementRate = analytics ? analytics.metrics.engagementRate : 0;
+        const activeUsers = analytics ? analytics.metrics.activeUsers : 0;
+        
+        // Update stats with real data
+        setStats([
+          {
+            title: "Total Customers",
+            value: totalCustomers.toLocaleString(),
+            change: "+0%", // TODO: Calculate actual change
+            trend: "up",
+            icon: Users,
+          },
+          {
+            title: "New This Month",
+            value: newThisMonth.toLocaleString(),
+            change: "+0%", // TODO: Calculate actual change
+            trend: "up",
+            icon: Activity,
+          },
+          {
+            title: "Engagement Rate",
+            value: `${engagementRate.toFixed(1)}%`,
+            change: "+0%", // TODO: Calculate actual change
+            trend: "up",
+            icon: TrendingUp,
+          },
+          {
+            title: "Active Users",
+            value: activeUsers.toLocaleString(),
+            change: "+0%", // TODO: Calculate actual change
+            trend: "up",
+            icon: DollarSign,
+          },
+        ]);
+
+        // Update recent activity with real customer data
+        const recentCustomers = customers.slice(0, 4).map(customer => {
+          const timeAgo = getTimeAgo(new Date(customer.createdAt));
+          return {
+            user: customer.name,
+            action: `joined as ${customer.status} customer`,
+            time: timeAgo,
+            avatar: customer.name.split(' ').map(n => n[0]).join('').toUpperCase(),
+          };
+        });
+        setRecentActivity(recentCustomers);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -225,6 +316,7 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     whileHover={{ scale: 1.02 }}
+                    onClick={action.onClick}
                     className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
                   >
                     <h4 className="font-medium text-sm">{action.title}</h4>

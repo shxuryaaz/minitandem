@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink, Link, BarChart3, X } from "lucide-react";
+import { Send, Lightbulb, Zap, Target, ArrowRight, Navigation, ExternalLink, Link, BarChart3, X, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { aiService, AIResponse } from "@/lib/ai";
 import { integrationManager } from "@/lib/integrations";
+import { CustomerService } from "@/lib/firestore";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -178,6 +179,35 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
     }
   };
 
+  const handleAddCustomer = async (name: string) => {
+    const loadingToast = toast.loading(`Adding customer "${name}"...`);
+    try {
+      const customer = await CustomerService.addCustomer({
+        name: name,
+        email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        company: 'Test Company',
+        status: 'trial',
+        phone: '+1-555-0123',
+        notes: `Customer added via AI Copilot`
+      });
+      
+      toast.dismiss(loadingToast);
+      toast.success(`Customer "${name}" added successfully!`);
+      
+      // Refresh the conversation to show updated data
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'assistant',
+        content: `Customer "${name}" has been added to your database. You can view all customers in the Customers section.`,
+        timestamp: new Date()
+      }]);
+    } catch (error) {
+      console.error('Error adding customer:', error);
+      toast.dismiss(loadingToast);
+      toast.error('Failed to add customer');
+    }
+  };
+
   const handleAction = (action: { type: "navigate" | "demo" | "info" | "connect" | "data"; label: string; data?: any }) => {
     switch (action.type) {
       case 'navigate':
@@ -199,8 +229,12 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
         }
         break;
       case 'data':
-        navigate('/analytics');
-        toast.success('Showing live data insights');
+        if (action.data?.action === 'add_customer' && action.data?.name) {
+          handleAddCustomer(action.data.name);
+        } else {
+          navigate('/analytics');
+          toast.success('Showing live data insights');
+        }
         break;
       case 'demo':
         toast.info(`Demo: ${action.label}`);
@@ -285,7 +319,11 @@ export function CopilotPanel({ isOpen, onClose }: CopilotPanelProps) {
                           ) : action.type === 'connect' ? (
                             <Link className="h-3 w-3" />
                           ) : action.type === 'data' ? (
-                            <BarChart3 className="h-3 w-3" />
+                            action.data?.action === 'add_customer' ? (
+                              <UserPlus className="h-3 w-3" />
+                            ) : (
+                              <BarChart3 className="h-3 w-3" />
+                            )
                           ) : action.type === 'demo' ? (
                             <Zap className="h-3 w-3" />
                           ) : (
