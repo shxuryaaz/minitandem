@@ -8,7 +8,28 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:8080', 'https://minitandem.vercel.app', 'https://minitandem-git-main-shxuryaaz.vercel.app'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.includes('localhost')) return callback(null, true);
+    
+    // Allow all Vercel domains
+    if (origin.includes('vercel.app')) return callback(null, true);
+    
+    // Allow specific domains
+    const allowedOrigins = [
+      'https://minitandem.vercel.app',
+      'https://minitandem-git-main-shxuryaaz.vercel.app'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(express.json());

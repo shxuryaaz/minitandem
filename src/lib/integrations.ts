@@ -3,6 +3,10 @@ import { IntegrationService, Integration } from './firestore';
 // Backend server configuration
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
+// Debug logging
+console.log('Backend URL:', BACKEND_URL);
+console.log('Environment variables:', import.meta.env);
+
 export interface IntegrationConfig {
   name: string;
   type: string;
