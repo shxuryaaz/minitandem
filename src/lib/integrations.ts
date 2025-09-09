@@ -504,7 +504,7 @@ export class IntegrationManager {
         body: JSON.stringify({
           credentials: credentials,
           message: `🤖 MiniTandem Test: ${message}`,
-          channel: credentials.channelId || '#general',
+          channel: credentials.channelId || 'general', // Try without # first
         }),
       });
       

@@ -173,14 +173,16 @@ app.post('/api/integrations/send/slack', async (req, res) => {
     }
 
     const token = credentials.botToken || credentials.accessToken;
+    const targetChannel = channel || credentials.channelId || 'general';
+    
     console.log('Slack API request:', {
-      channel: channel || credentials.channelId || '#general',
+      channel: targetChannel,
       message: message,
       tokenPreview: token.substring(0, 10) + '...'
     });
 
     const response = await axios.post('https://slack.com/api/chat.postMessage', {
-      channel: channel || credentials.channelId || '#general',
+      channel: targetChannel,
       text: message,
     }, {
       headers: {
